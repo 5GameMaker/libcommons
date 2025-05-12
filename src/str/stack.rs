@@ -92,15 +92,22 @@ impl<const CAPACITY: usize> StackString<CAPACITY> {
     }
 
     pub fn as_str_mut(&mut self) -> &mut str {
-        core::str::from_utf8_mut(self.as_bytes_mut()).unwrap()
+        core::str::from_utf8_mut(&mut self.buf[0..self.len]).unwrap()
     }
 
     pub fn as_bytes(&self) -> &[u8] {
         &self.buf[0..self.len]
     }
 
-    pub fn as_bytes_mut(&mut self) -> &mut [u8] {
-        &mut self.buf[0..self.len]
+    /// Get bytes behind this string.
+    ///
+    /// Unlike [Self::as_bytes], this will return the entire
+    /// buffer. As such, parts of it may be garbage data.
+    ///
+    /// ## Safety
+    /// Buffer must remain valid utf8.
+    pub unsafe fn as_bytes_mut(&mut self) -> &mut [u8] {
+        &mut self.buf
     }
 }
 impl<const CAPACITY: usize> Default for StackString<CAPACITY> {
@@ -123,11 +130,6 @@ impl<const CAPACITY: usize> DerefMut for StackString<CAPACITY> {
 impl<const CAPACITY: usize> AsRef<[u8]> for StackString<CAPACITY> {
     fn as_ref(&self) -> &[u8] {
         self.as_bytes()
-    }
-}
-impl<const CAPACITY: usize> AsMut<[u8]> for StackString<CAPACITY> {
-    fn as_mut(&mut self) -> &mut [u8] {
-        self.as_bytes_mut()
     }
 }
 impl<const CAPACITY: usize> AsRef<str> for StackString<CAPACITY> {
