@@ -1,0 +1,11 @@
+[package]
+name = "commons"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+default = ["str", "dirs", "extra_traits", "lock"]
+str = []
+dirs = []
+extra_traits = []
+lock = []
