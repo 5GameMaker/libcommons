@@ -4,9 +4,10 @@ version = "0.2.0"
 edition = "2024"
 
 [features]
-default = ["str", "dirs", "extra_traits", "lock", "io"]
+default = ["str", "dirs", "extra_traits", "lock", "io", "result"]
 str = []
 dirs = []
 extra_traits = []
 lock = []
 io = []
+result = []

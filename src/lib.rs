@@ -6,7 +6,7 @@ pub mod io;
 pub mod os;
 #[cfg(feature = "str")]
 pub mod str;
-#[cfg(feature = "extra_traits")]
+#[cfg(any(feature = "extra_traits", feature = "result"))]
 pub mod util;
 
 pub mod prelude {
