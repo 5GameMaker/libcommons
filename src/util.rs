@@ -1,3 +1,4 @@
+#[cfg(feature = "extra_traits")]
 pub trait Fun {
     /// Use value instead of self.
     fn instead<Y>(&self, value: Y) -> Y;
@@ -23,6 +24,7 @@ pub trait Fun {
     /// Drop self.
     fn drop(self);
 }
+#[cfg(feature = "extra_traits")]
 impl<T> Fun for T {
     fn instead<Y>(&self, value: Y) -> Y {
         value
@@ -63,3 +65,10 @@ impl<T> Fun for T {
 
     fn drop(self) {}
 }
+
+#[cfg(feature = "result")]
+pub type BoxError = Box<dyn std::error::Error + Send + Sync + 'static>;
+#[cfg(feature = "result")]
+pub type Result<T = (), E = BoxError> = std::result::Result<T, E>;
+#[cfg(feature = "result")]
+pub const K: Result = Ok(());
