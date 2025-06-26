@@ -21,8 +21,18 @@ pub trait Fun {
     where
         F: FnOnce(Self) -> Self,
         Self: Sized;
+    /// Reverse [Eq].
+    fn rev_eq<O>(&self, other: &O) -> bool
+    where
+        O: PartialEq<Self>;
+    /// Reverse [Eq].
+    fn rev_ne<O>(&self, other: &O) -> bool
+    where
+        O: PartialEq<Self>;
     /// Drop self.
     fn drop(self);
+    /// Forget self.
+    fn forget(self);
 }
 #[cfg(feature = "extra_traits")]
 impl<T> Fun for T {
@@ -63,7 +73,25 @@ impl<T> Fun for T {
         with(self)
     }
 
+    fn rev_eq<O>(&self, other: &O) -> bool
+    where
+        O: PartialEq<Self>,
+    {
+        other.eq(self)
+    }
+
+    fn rev_ne<O>(&self, other: &O) -> bool
+    where
+        O: PartialEq<Self>,
+    {
+        other.ne(self)
+    }
+
     fn drop(self) {}
+
+    fn forget(self) {
+        std::mem::forget(self);
+    }
 }
 
 #[cfg(feature = "result")]

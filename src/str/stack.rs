@@ -88,13 +88,16 @@ impl<const CAPACITY: usize> StackString<CAPACITY> {
     }
 
     pub fn as_str(&self) -> &str {
-        core::str::from_utf8(self.as_bytes()).unwrap()
+        unsafe { core::str::from_utf8_unchecked(self.as_bytes()) }
     }
 
     pub fn as_str_mut(&mut self) -> &mut str {
-        core::str::from_utf8_mut(&mut self.buf[0..self.len]).unwrap()
+        unsafe { core::str::from_utf8_unchecked_mut(&mut self.buf[0..self.len]) }
     }
 
+    /// Get the bytes of this string.
+    ///
+    /// This will only return bytes up to the length of the string.
     pub fn as_bytes(&self) -> &[u8] {
         &self.buf[0..self.len]
     }

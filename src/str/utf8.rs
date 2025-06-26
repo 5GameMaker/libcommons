@@ -5,6 +5,10 @@ impl<R: Read> Utf8<R> {
     pub fn new(read: R) -> Self {
         Self(read)
     }
+
+    pub fn into_inner(self) -> R {
+        self.0
+    }
 }
 impl<R: Read> Iterator for Utf8<R> {
     type Item = std::io::Result<char>;
