@@ -29,6 +29,8 @@ pub enum DirType {
     /// Session information directory.
     Runtime,
     /// Resources directory.
+    ///
+    /// User share directory is also used for storing user data.
     Share,
     /// Temporary application data directory.
     Cache,
@@ -37,14 +39,8 @@ pub enum DirType {
     /// Application configuration directory.
     Config,
     /// Executable files directory.
-    ///
-    /// ## OS-specific
-    /// Will return [None] on Windows.
     Bin,
     /// Library files directory.
-    ///
-    /// ## OS-specific
-    /// Will return [None] on Windows.
     Lib,
 }
 #[cfg(feature = "dirs")]
