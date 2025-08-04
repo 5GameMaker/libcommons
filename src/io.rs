@@ -2,6 +2,26 @@ use std::io::{self, Read, Write};
 
 pub trait ReadExt: Read {
     /// Pipe all contents of self into provided writer.
+    fn pipe<const BUF: usize, W>(&mut self, write: W) -> io::Result<()>
+    where
+        W: Write;
+
+    /// Pipe all contents of self into provided writer.
+    fn pipe_with<const BUF: usize, W, F>(&mut self, write: W, cb: F) -> io::Result<()>
+    where
+        W: Write,
+        F: FnMut(u64);
+
+    #[cfg(feature = "str")]
+    fn into_utf8(self) -> crate::str::utf8::Utf8<Self>
+    where
+        Self: Sized;
+}
+impl<T> ReadExt for T
+where
+    T: Read,
+{
+    /// Pipe all contents of self into provided writer.
     fn pipe<const BUF: usize, W>(&mut self, mut write: W) -> io::Result<()>
     where
         W: Write,
@@ -12,15 +32,20 @@ pub trait ReadExt: Read {
         while len > 0 || reader.is_some() {
             if len < buf.len() {
                 if let Some(x) = &mut reader {
-                    match x.read(&mut buf[len..]).unwrap() {
+                    match x.read(&mut buf[len..])? {
                         0 => drop(reader.take()),
                         l => len += l,
                     }
                 }
             }
             if len > 0 {
-                match write.write(&buf[..len]).unwrap() {
-                    0 => panic!("unexpected eof"),
+                match write.write(&buf[..len])? {
+                    0 => {
+                        return Err(io::Error::new(
+                            io::ErrorKind::UnexpectedEof,
+                            "unexpected eof",
+                        ));
+                    }
                     l => len -= l,
                 }
             }
@@ -41,15 +66,20 @@ pub trait ReadExt: Read {
         while len > 0 || reader.is_some() {
             if len < buf.len() {
                 if let Some(x) = &mut reader {
-                    match x.read(&mut buf[len..]).unwrap() {
+                    match x.read(&mut buf[len..])? {
                         0 => drop(reader.take()),
                         l => len += l,
                     }
                 }
             }
             if len > 0 {
-                match write.write(&buf[..len]).unwrap() {
-                    0 => panic!("unexpected eof"),
+                match write.write(&buf[..len])? {
+                    0 => {
+                        return Err(io::Error::new(
+                            io::ErrorKind::UnexpectedEof,
+                            "unexpected eof",
+                        ));
+                    }
                     l => {
                         len -= l;
                         download += l as u64;
@@ -59,5 +89,13 @@ pub trait ReadExt: Read {
             }
         }
         Ok(())
+    }
+
+    #[cfg(feature = "str")]
+    fn into_utf8(self) -> crate::str::utf8::Utf8<Self>
+    where
+        Self: Sized,
+    {
+        crate::str::utf8::Utf8::new(self)
     }
 }
