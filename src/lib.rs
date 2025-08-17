@@ -1,21 +1,24 @@
+//! # Libcommons
+//!
+//! Utilities I don't want to write again.
+
 #![allow(incomplete_features)]
 #![cfg_attr(
-    all(feature = "matrix", feature = "nightly"),
-    feature(
-        generic_const_exprs,
-        generic_arg_infer,
-        maybe_uninit_array_assume_init,
-        array_try_map,
-    )
+    feature = "nightly",
+    feature(generic_const_exprs, maybe_uninit_array_assume_init, array_try_map)
 )]
 
-#[cfg(any(feature = "dirs", feature = "lock"))]
+#[cfg(feature = "ffi")]
+pub mod ffi;
+#[cfg(feature = "dirs")]
 pub mod fs;
 #[cfg(feature = "io")]
 pub mod io;
+#[cfg(feature = "iter")]
+pub mod iter;
 #[cfg(all(feature = "matrix", feature = "nightly"))]
 pub mod matrix;
-#[cfg(any(feature = "dirs", feature = "lock"))]
+#[cfg(feature = "dirs")]
 pub mod os;
 #[cfg(feature = "str")]
 pub mod str;
@@ -28,6 +31,8 @@ compile_error!("'matrix' feature requires 'nightly'!");
 pub mod prelude {
     #[cfg(feature = "io")]
     pub use crate::io::ReadExt;
+    #[cfg(feature = "iter")]
+    pub use crate::iter::IterExt;
     #[cfg(feature = "str")]
     pub use crate::str::AsUtf8;
     #[cfg(feature = "extra_traits")]

@@ -52,8 +52,3 @@ impl DirType {
         }
     }
 }
-
-#[cfg(all(unix, feature = "lock"))]
-pub use crate::os::unix::lock::PathLock;
-#[cfg(all(unix, feature = "lock"))]
-pub use crate::os::unix::lock::lock;

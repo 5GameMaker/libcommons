@@ -17,7 +17,7 @@ Nightly.
 Add to `Cargo.toml`:
 
 - `stable`
-`commons = { git = "https://github.com/5GameMaker/libcommons", branch = "stable" }`
+`commons = "0.6.0"`
 
 - `master`
 > `master` may sometimes not compile and contain WIP features that don't work.

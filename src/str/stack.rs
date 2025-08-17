@@ -40,6 +40,7 @@ pub struct StackString<const CAPACITY: usize> {
     len: usize,
 }
 impl<const CAPACITY: usize> StackString<CAPACITY> {
+    /// Create an empty string.
     pub const fn new() -> Self {
         Self {
             buf: [0; CAPACITY],
@@ -47,18 +48,27 @@ impl<const CAPACITY: usize> StackString<CAPACITY> {
         }
     }
 
+    /// Get the length of this string in bytes.
     pub fn len(&self) -> usize {
         self.len
     }
 
+    /// Check if this string is empty.
     pub fn is_empty(&self) -> bool {
         self.len == 0
     }
 
+    /// Get this string's capacity.
+    ///
+    /// Will always return the value provided as a generic argument.
     pub const fn capacity(&self) -> usize {
         CAPACITY
     }
 
+    /// Append a formatter.
+    ///
+    /// If there isn't enough empty space in the buffer, [PushError] is
+    /// returned and string is reverted to its length before the call.
     pub fn write_fmt(&mut self, fmt: Arguments<'_>) -> Result<(), PushError> {
         let len = self.len;
         let mut writer = Writer(self);
@@ -71,10 +81,18 @@ impl<const CAPACITY: usize> StackString<CAPACITY> {
         }
     }
 
+    /// Append a [char].
+    ///
+    /// If there isn't enough empty space in the buffer, [PushError] is
+    /// returned and string is reverted to its length before the call.
     pub fn push(&mut self, char: char) -> Result<(), PushError> {
         self.write_fmt(format_args!("{char}"))
     }
 
+    /// Append an [str].
+    ///
+    /// If there isn't enough empty space in the buffer, [PushError] is
+    /// returned and string is reverted to its length before the call.
     pub fn push_str(&mut self, str: &str) -> Result<(), PushError> {
         let len = self.len;
         let mut writer = Writer(self);
@@ -87,10 +105,12 @@ impl<const CAPACITY: usize> StackString<CAPACITY> {
         }
     }
 
+    /// Get underlying bytes as an [str].
     pub fn as_str(&self) -> &str {
         unsafe { core::str::from_utf8_unchecked(self.as_bytes()) }
     }
 
+    /// Get underlying bytes as a mutable [str].
     pub fn as_str_mut(&mut self) -> &mut str {
         unsafe { core::str::from_utf8_unchecked_mut(&mut self.buf[0..self.len]) }
     }
@@ -201,5 +221,24 @@ impl<const CAPACITY: usize> PartialEq<str> for StackString<CAPACITY> {
 impl<const CAPACITY: usize> PartialEq<String> for StackString<CAPACITY> {
     fn eq(&self, other: &String) -> bool {
         self.as_str() == other
+    }
+}
+impl<const CAPACITY: usize> Write for StackString<CAPACITY> {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        Writer(self).write(buf)
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        Writer(self).flush()
+    }
+}
+impl<const CAPACITY: usize> std::fmt::Display for StackString<CAPACITY> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.as_str(), f)
+    }
+}
+impl<const CAPACITY: usize> std::fmt::Debug for StackString<CAPACITY> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Debug::fmt(self.as_str(), f)
     }
 }

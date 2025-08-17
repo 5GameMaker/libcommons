@@ -201,7 +201,7 @@ where
         let mut i = 0usize;
         while i < SIZE {
             let mut t = T::ONE;
-            std::mem::swap(&mut t, &mut matrix.0[i + i * SIZE]);
+            std::mem::swap(&mut t, &mut matrix.0[i]);
             std::mem::forget(t);
             i += 1;
         }
@@ -233,6 +233,9 @@ where
     [&'a T; ROWS * COLUMNS]:,
     T: Copy,
 {
+    /// Create a copy of this matrix with all values copied.
+    ///
+    /// Requires [Copy] to be implemented for all matrix elements.
     pub fn copied(&self) -> Matrix<T, ROWS, COLUMNS> {
         unsafe {
             let mut mat: [MaybeUninit<T>; ROWS * COLUMNS] =
@@ -250,6 +253,9 @@ where
     [&'a T; ROWS * COLUMNS]:,
     T: Clone,
 {
+    /// Create a copy of this matrix with all values cloned.
+    ///
+    /// Requires [Clone] to be implemented for all matrix elements.
     pub fn cloned(&self) -> Matrix<T, ROWS, COLUMNS> {
         unsafe {
             let mut mat: [MaybeUninit<T>; ROWS * COLUMNS] =
@@ -272,6 +278,7 @@ where
         Self(value)
     }
 
+    /// Create a new uninitialized matrix.
     pub fn new_uninit() -> Matrix<MaybeUninit<T>, ROWS, COLUMNS>
     where
         [MaybeUninit<T>; ROWS * COLUMNS]:,
@@ -339,6 +346,7 @@ where
         unsafe { self.0.get_unchecked_mut(row + col * ROWS) }
     }
 
+    /// Map all elements of this matrix to a new matrix.
     pub fn map<Y, F>(self, map: F) -> Matrix<Y, ROWS, COLUMNS>
     where
         [Y; ROWS * COLUMNS]:,
@@ -347,6 +355,7 @@ where
         Matrix::new(self.0.map(map))
     }
 
+    /// Get a matrix of references to elements of this matrix
     pub const fn as_ref<'a>(&'a self) -> Matrix<&'a T, ROWS, COLUMNS>
     where
         [&'a T; ROWS * COLUMNS]:,
@@ -363,6 +372,7 @@ where
         }
     }
 
+    /// Get a matrix of mutable references to elements of this matrix
     pub const fn as_mut<'a>(&'a mut self) -> Matrix<&'a mut T, ROWS, COLUMNS>
     where
         [&'a mut T; ROWS * COLUMNS]:,
