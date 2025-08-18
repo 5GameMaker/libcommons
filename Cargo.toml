@@ -1,16 +1,18 @@
 [package]
 name = "libcommons"
-version = "0.5.0"
+description = "A bunch of things I don't want to write again"
+version = "0.6.0"
 edition = "2024"
 
 [features]
 default = []
-full = ["str", "dirs", "extra_traits", "lock", "io", "result"]
+full = ["str", "dirs", "extra_traits", "io", "result", "iter", "ffi"]
 str = []
 dirs = []
 extra_traits = []
-lock = []
 io = []
 result = []
+iter = []
+ffi = []
 matrix = ["nightly"]
 nightly = []
