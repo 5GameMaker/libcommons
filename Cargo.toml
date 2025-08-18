@@ -3,6 +3,11 @@ name = "libcommons"
 description = "A bunch of things I don't want to write again"
 version = "0.6.0"
 edition = "2024"
+readme = false
+repository = "https://github.com/5GameMaker/libcommons"
+license = "MIT"
+keywords = ["common", "ffi"]
+categories = ["development-tools::ffi"]
 
 [features]
 default = []
