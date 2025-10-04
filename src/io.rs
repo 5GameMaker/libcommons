@@ -61,12 +61,12 @@ where
         let mut buf = [0u8; BUF];
         let mut len = 0usize;
         while len > 0 || reader.is_some() {
-            if len < buf.len() {
-                if let Some(x) = &mut reader {
-                    match x.read(&mut buf[len..])? {
-                        0 => drop(reader.take()),
-                        l => len += l,
-                    }
+            if len < buf.len()
+                && let Some(x) = &mut reader
+            {
+                match x.read(&mut buf[len..])? {
+                    0 => drop(reader.take()),
+                    l => len += l,
                 }
             }
             if len > 0 {
@@ -94,12 +94,12 @@ where
         let mut len = 0usize;
         let mut download = 0u64;
         while len > 0 || reader.is_some() {
-            if len < buf.len() {
-                if let Some(x) = &mut reader {
-                    match x.read(&mut buf[len..])? {
-                        0 => drop(reader.take()),
-                        l => len += l,
-                    }
+            if len < buf.len()
+                && let Some(x) = &mut reader
+            {
+                match x.read(&mut buf[len..])? {
+                    0 => drop(reader.take()),
+                    l => len += l,
                 }
             }
             if len > 0 {
@@ -343,7 +343,7 @@ where
             return self.read.read(buf);
         }
 
-        match (self.len == 0, buf.len() == 0, &mut self.error) {
+        match (self.len == 0, buf.is_empty(), &mut self.error) {
             (true, _, error @ Some(_)) | (false, true, error @ Some(_)) => {
                 let error = error.take().unwrap();
                 while self.len < LEN {
@@ -396,7 +396,7 @@ where
             return self.read.read_exact(buf);
         }
 
-        if buf.len() == 0 {
+        if buf.is_empty() {
             return if let Some(why) = self.error.take() {
                 while self.len != self.buffer.len() {
                     match self.read.read(&mut self.buffer[self.len..]) {

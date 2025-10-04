@@ -30,27 +30,42 @@ pub struct FfiStr {
     inner: str,
 }
 impl FfiStr {
-    pub fn as_str(&self) -> &str {
+    /// Get an [str] reference from this [FfiStr].
+    ///
+    /// Since all ffistrs must be valid UTF-8, this reference
+    /// can be cheaply passed to
+    pub const fn as_str(&self) -> &str {
         &self.inner
     }
 
-    pub fn as_bytes(&self) -> &[u8] {
+    /// Get this string's underlying bytes.
+    pub const fn as_bytes(&self) -> &[u8] {
         self.inner.as_bytes()
     }
 
-    pub fn from_str<'a>(str: &'a str) -> &'a Self {
+    /// Convert an [str] to [FfiStr].
+    pub const fn from_str(str: &str) -> &Self {
         unsafe { transmute(str) }
     }
 
-    pub unsafe fn from_raw_parts(data: *const u8, len: usize) -> &'static Self {
+    /// Create an [FfiStr] referencing the buffer.
+    ///
+    /// ## Safety
+    /// Provided pointer must be valid for the entire time
+    /// that this [FfiStr] will be used.
+    pub const unsafe fn from_raw_parts(data: *const u8, len: usize) -> &'static Self {
         unsafe { transmute(str::from_utf8_unchecked(slice::from_raw_parts(data, len))) }
     }
-
-    pub unsafe fn from_utf8_unchecked<'a>(slice: &'a [u8]) -> &'a Self {
+    /// Create an [FfiStr] from bytes.
+    ///
+    /// ## Safety
+    /// Provided buffer must contain valid UTF-8 data.
+    pub const unsafe fn from_utf8_unchecked(slice: &[u8]) -> &Self {
         unsafe { transmute(str::from_utf8_unchecked(slice)) }
     }
 
-    pub fn as_ptr(&self) -> FfiStrPtr<'_> {
+    /// Make this [FfiStr] passable via ffi.
+    pub const fn as_ptr(&self) -> FfiStrPtr<'_> {
         FfiStrPtr {
             buf: self.inner.as_ptr(),
             len: self.inner.len(),
@@ -58,6 +73,7 @@ impl FfiStr {
         }
     }
 
+    /// Convert this [FfiStr] into an [FfiString].
     pub fn to_ffi_string(&self) -> FfiString {
         self.into()
     }
@@ -101,22 +117,33 @@ pub struct FfiStrPtr<'a> {
     _phantom: PhantomData<&'a str>,
 }
 impl<'a> FfiStrPtr<'a> {
-    pub fn as_ptr(&self) -> *const c_char {
+    /// Obtain the underlying [c_char] pointer.
+    pub const fn as_ptr(&self) -> *const c_char {
         self.buf as *const c_char
     }
 
-    pub fn len(&self) -> usize {
+    /// Get length of this [FfiStrPtr].
+    pub const fn len(&self) -> usize {
         self.len
     }
 
-    pub fn as_ref(&self) -> &FfiStr {
-        self.into()
+    /// Check whether this [FfiStrPtr] is empty.
+    pub const fn is_empty(&self) -> bool {
+        self.len == 0
     }
 
-    pub fn as_str(&self) -> &str {
-        Into::<&FfiStr>::into(self).as_str()
+    /// Convert this [FfiStrPtr] to [str].
+    pub const fn as_str(&self) -> &str {
+        unsafe {
+            if self.is_empty() {
+                str::from_utf8_unchecked(slice::from_raw_parts(self.buf, self.len))
+            } else {
+                ""
+            }
+        }
     }
 
+    /// Clone this [FfiStrPtr] into an [FfiString].
     pub fn to_ffi_string(&self) -> FfiString {
         self.into()
     }
@@ -143,6 +170,16 @@ pub struct FfiString {
     drop: Option<unsafe extern "C" fn(*mut FfiString)>,
 }
 impl FfiString {
+    /// Create a new FfiString.
+    ///
+    /// This method will not allocate.
+    ///
+    /// ```
+    /// use libcommons::ffi::str::FfiString;
+    ///
+    /// let mut string = FfiString::new();
+    /// assert!(string.is_empty());
+    /// ```
     pub const fn new() -> Self {
         Self {
             buf: null_mut(),
@@ -163,7 +200,9 @@ impl FfiString {
     /// assert_eq!(string.as_bytes(), &[b'H', b'i', b'!']);
     /// ```
     pub fn with_capacity(len: usize) -> Self {
-        if len == 0 {}
+        if len == 0 {
+            return Self::new();
+        }
 
         let mut string = String::with_capacity(len);
         let ffi = Self {
@@ -184,7 +223,7 @@ impl FfiString {
     /// let mut string = FfiString::from("Hi!");
     /// assert_eq!(string.as_bytes(), &[b'H', b'i', b'!']);
     /// ```
-    pub fn as_bytes(&self) -> &[u8] {
+    pub const fn as_bytes(&self) -> &[u8] {
         if self.buf.is_null() {
             &[]
         } else {
@@ -200,7 +239,7 @@ impl FfiString {
     /// let mut string = FfiString::from("Hi!");
     /// assert_eq!(string.as_str(), "Hi!");
     /// ```
-    pub fn as_str(&self) -> &str {
+    pub const fn as_str(&self) -> &str {
         unsafe { str::from_utf8_unchecked(slice::from_raw_parts(self.buf, self.len)) }
     }
 
@@ -212,7 +251,7 @@ impl FfiString {
     /// let mut string = FfiString::from("Hi!");
     /// string.as_ffi_str();
     /// ```
-    pub fn as_ffi_str(&self) -> &FfiStr {
+    pub const fn as_ffi_str(&self) -> &FfiStr {
         unsafe { FfiStr::from_raw_parts(self.buf, self.len) }
     }
 
@@ -227,6 +266,19 @@ impl FfiString {
     /// ```
     pub const fn len(&self) -> usize {
         self.len
+    }
+
+    /// Check if string is empty.
+    ///
+    /// ```
+    /// use libcommons::ffi::str::FfiString;
+    ///
+    /// let mut string = FfiString::from("");
+    ///
+    /// assert_eq!(string.is_empty(), true);
+    /// ```
+    pub const fn is_empty(&self) -> bool {
+        self.len == 0
     }
 
     /// Obtain this string's capacity.
@@ -287,10 +339,10 @@ impl FfiString {
             }
             newstring.as_bytes_mut()[self.len..olen].copy_from_slice(str.as_bytes());
 
-            if !self.buf.is_null() {
-                if let Some(drop) = self.drop {
-                    drop(self);
-                }
+            if !self.buf.is_null()
+                && let Some(drop) = self.drop
+            {
+                drop(self);
             }
 
             self.buf = newstring.as_mut_ptr();
@@ -327,12 +379,17 @@ impl FfiString {
 impl Drop for FfiString {
     fn drop(&mut self) {
         unsafe {
-            if !self.buf.is_null() {
-                if let Some(drop) = self.drop {
-                    drop(self);
-                }
+            if !self.buf.is_null()
+                && let Some(drop) = self.drop
+            {
+                drop(self);
             }
         }
+    }
+}
+impl Default for FfiString {
+    fn default() -> Self {
+        Self::new()
     }
 }
 impl<'a> PartialEq<&'a str> for FfiString {
@@ -350,12 +407,14 @@ impl Display for FfiString {
         Display::fmt(self.as_str(), f)
     }
 }
-impl<'a> From<String> for FfiString {
+impl From<String> for FfiString {
     fn from(mut string: String) -> Self {
         let ffi = Self {
-            buf: (string.capacity() != 0)
-                .then_some(string.as_mut_ptr())
-                .unwrap_or(null_mut()),
+            buf: if string.capacity() == 0 {
+                null_mut()
+            } else {
+                string.as_mut_ptr()
+            },
             len: string.len(),
             capacity: string.capacity(),
             drop: (string.capacity() != 0).then_some(__libcommons_rust_drop),

@@ -36,7 +36,7 @@ pub mod prelude {
     #[cfg(feature = "str")]
     pub use crate::str::AsUtf8;
     #[cfg(feature = "extra_traits")]
-    pub use crate::util::Fun;
+    pub use crate::util::{Fun, ResultExt};
     #[cfg(feature = "result")]
     pub use crate::util::{K, Result};
 }

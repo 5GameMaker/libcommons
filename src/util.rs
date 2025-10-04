@@ -316,6 +316,56 @@ impl<T> Fun for T {
     }
 }
 
+#[cfg(feature = "extra_traits")]
+pub trait ResultExt<T, E> {
+    /// Deflate error.
+    ///
+    /// Selects for an error via a filter, if the error matches the
+    /// filter, returns [Err]. Otherwise, the original value wrapped
+    /// in [Ok]. This function is the opposite of [std::result::Result::flatten].
+    ///
+    /// ```
+    /// use libcommons::util::ResultExt;
+    ///
+    /// #[derive(Debug, PartialEq)]
+    /// enum ErrTypes {
+    ///     One,
+    ///     Two,
+    /// }
+    ///
+    /// type R = Result<Result<bool, ErrTypes>, ErrTypes>;
+    ///
+    /// let ohno1: R = Err(ErrTypes::One).inflate(|x| Some(ErrTypes::One).take_if(|_| x == &ErrTypes::Two));
+    /// let ohno2: R = Err(ErrTypes::Two).inflate(|x| Some(ErrTypes::One).take_if(|_| x == &ErrTypes::Two));
+    /// let coool: R = Ok(true).inflate(|x| Some(ErrTypes::One).take_if(|_| x == &ErrTypes::Two));
+    ///
+    /// assert_eq!(ohno1, Ok(Err(ErrTypes::One)));
+    /// assert_eq!(ohno2, Err(ErrTypes::One));
+    /// assert_eq!(coool, Ok(Ok(true)));
+    /// ```
+    fn inflate<F>(self, filter: F) -> Result<Result<T, E>, E>
+    where
+        F: FnMut(&E) -> Option<E>;
+}
+#[cfg(feature = "extra_traits")]
+impl<T, E> ResultExt<T, E> for std::result::Result<T, E> {
+    fn inflate<F>(self, mut filter: F) -> Result<Result<T, E>, E>
+    where
+        F: FnMut(&E) -> Option<E>,
+    {
+        match self {
+            Self::Ok(x) => Ok(Ok(x)),
+            Self::Err(x) => {
+                if let Some(x) = filter(&x) {
+                    Err(x)
+                } else {
+                    Ok(Err(x))
+                }
+            }
+        }
+    }
+}
+
 #[cfg(feature = "result")]
 pub type BoxError = Box<dyn std::error::Error + Send + Sync + 'static>;
 #[cfg(feature = "result")]

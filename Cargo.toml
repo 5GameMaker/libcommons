@@ -1,7 +1,7 @@
 [package]
 name = "libcommons"
 description = "A bunch of things I don't want to write again"
-version = "0.6.0"
+version = "0.7.0"
 edition = "2024"
 readme = false
 repository = "https://github.com/5GameMaker/libcommons"

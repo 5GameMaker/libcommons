@@ -161,11 +161,9 @@ where
             iter.assume_init()
         };
 
-        if fetch {
-            if let Some(x) = self.iter.next() {
-                self.buf.last_mut().unwrap().write(x);
-                self.len += 1;
-            }
+        if fetch && let Some(x) = self.iter.next() {
+            self.buf.last_mut().unwrap().write(x);
+            self.len += 1;
         }
 
         Some(item)
@@ -194,6 +192,7 @@ where
             iter: self.iter.clone(),
             buf: unsafe {
                 let mut buf = [const { MaybeUninit::uninit() }; LEN];
+                #[allow(clippy::needless_range_loop)]
                 for i in 0..self.len {
                     buf[i].write(self.buf[i].assume_init_ref().clone());
                 }
