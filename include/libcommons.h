@@ -1,5 +1,5 @@
 #ifndef LIBCOMMONS_H
-#define LIBCOMMONS_H "0.6.0"
+#define LIBCOMMONS_H "0.7.0"
 
 #ifndef LIBCOMMONS_PREFIX
 #define LIBCOMMONS_PREFIX libcommons_

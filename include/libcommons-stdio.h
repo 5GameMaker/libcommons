@@ -1,5 +1,5 @@
 #ifndef LIBCOMMONS_STDIO_H
-#define LIBCOMMONS_STDIO_H "0.6.0"
+#define LIBCOMMONS_STDIO_H "0.7.0"
 
 #include "libcommons.h"
 

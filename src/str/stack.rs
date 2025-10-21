@@ -1,4 +1,5 @@
 use std::{
+    borrow::{Borrow, BorrowMut},
     error::Error,
     fmt::{Arguments, Display},
     hash::Hash,
@@ -7,11 +8,11 @@ use std::{
     str::FromStr,
 };
 
-#[derive(Debug)]
 /// Failed to push a character into stack string.
 ///
 /// This error occurs when during a [StackString::push] or
 /// [StackString::push_str] new data overflows the buffer.
+#[derive(Debug)]
 pub struct PushError;
 impl Display for PushError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -35,6 +36,7 @@ impl<const CAPACITY: usize> Write for Writer<'_, CAPACITY> {
 }
 
 /// Stack-allocated string.
+#[derive(Clone, Copy)]
 pub struct StackString<const CAPACITY: usize> {
     buf: [u8; CAPACITY],
     len: usize,
@@ -133,6 +135,11 @@ impl<const CAPACITY: usize> StackString<CAPACITY> {
         &mut self.buf
     }
 }
+impl<const CAPACITY: usize> Hash for StackString<CAPACITY> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.as_str().hash(state)
+    }
+}
 impl<const CAPACITY: usize> Default for StackString<CAPACITY> {
     fn default() -> Self {
         Self::new()
@@ -165,6 +172,16 @@ impl<const CAPACITY: usize> AsMut<str> for StackString<CAPACITY> {
         self.as_str_mut()
     }
 }
+impl<const CAPACITY: usize> BorrowMut<str> for StackString<CAPACITY> {
+    fn borrow_mut(&mut self) -> &mut str {
+        self.as_str_mut()
+    }
+}
+impl<const CAPACITY: usize> Borrow<str> for StackString<CAPACITY> {
+    fn borrow(&self) -> &str {
+        self.as_str()
+    }
+}
 impl<const CAPACITY: usize> From<StackString<CAPACITY>> for String {
     fn from(value: StackString<CAPACITY>) -> Self {
         String::from_str(value.as_str()).unwrap()
@@ -195,11 +212,6 @@ impl<const CAPACITY: usize> TryFrom<&'_ str> for StackString<CAPACITY> {
         let mut st = Self::new();
         st.push_str(value)?;
         Ok(st)
-    }
-}
-impl<const CAPACITY: usize> Hash for StackString<CAPACITY> {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        state.write(self.as_bytes());
     }
 }
 impl<const CAPACITY: usize> PartialEq for StackString<CAPACITY> {
