@@ -19,5 +19,7 @@ io = []
 result = []
 iter = []
 ffi = []
-matrix = ["nightly"]
+
+full-nightly = ["full", "matrix"]
 nightly = []
+matrix = ["nightly"]

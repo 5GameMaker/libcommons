@@ -1,8 +1,5 @@
 use std::{
-    fmt::Debug,
-    hint::black_box,
-    mem::MaybeUninit,
-    ops::{
+    fmt::Debug, gca, hint::black_box, mem::MaybeUninit, ops::{
         Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Rem, RemAssign, Sub,
         SubAssign,
     },
@@ -269,8 +266,9 @@ where
 }
 impl<T, const ROWS: usize, const COLUMNS: usize> Matrix<T, ROWS, COLUMNS>
 where
-    [T; ROWS * COLUMNS]:,
+    [T; Self::SIZE]:,
 {
+    const SIZE: usize = ROWS * COLUMNS;
     /// Create a new matrix.
     ///
     /// Matrix layout is a flattened array of rows.
@@ -358,7 +356,7 @@ where
     /// Get a matrix of references to elements of this matrix
     pub const fn as_ref<'a>(&'a self) -> Matrix<&'a T, ROWS, COLUMNS>
     where
-        [&'a T; ROWS * COLUMNS]:,
+        [&'a T; const { ROWS * COLUMNS }]:,
     {
         unsafe {
             let mut mat: [MaybeUninit<&'a T>; ROWS * COLUMNS] =
@@ -375,7 +373,7 @@ where
     /// Get a matrix of mutable references to elements of this matrix
     pub const fn as_mut<'a>(&'a mut self) -> Matrix<&'a mut T, ROWS, COLUMNS>
     where
-        [&'a mut T; ROWS * COLUMNS]:,
+        [&'a mut T; gca!(ROWS * COLUMNS)]:,
     {
         unsafe {
             let mut mat: [MaybeUninit<&'a mut T>; ROWS * COLUMNS] =
