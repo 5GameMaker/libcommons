@@ -180,6 +180,7 @@ impl_num_f! {
 /// Rows and columns represent the y and x coordinates respectively.
 #[repr(transparent)]
 #[derive(Clone, Copy, Debug, Hash)]
+#[deprecated = "this feature does not work starting with Rust 1.100 due to new trait solver not supporting required nightly features"]
 pub struct Matrix<T, const ROWS: usize, const COLUMNS: usize>([T; ROWS * COLUMNS])
 where
     [T; ROWS * COLUMNS]:;
@@ -524,16 +525,25 @@ where
     }
 }
 
+#[allow(deprecated)]
+#[deprecated = "this feature does not work starting with Rust 1.100 due to new trait solver not supporting required nightly features"]
 pub type Mat4f = Matrix<f32, 4, 4>;
 /// Identity matrix for f32 4x4 matrix.
+#[allow(deprecated)]
+#[deprecated = "this feature does not work starting with Rust 1.100 due to new trait solver not supporting required nightly features"]
 pub const MAT4F_IDENTITY: Mat4f = Mat4f::IDENTITY;
+#[allow(deprecated)]
+#[deprecated = "this feature does not work starting with Rust 1.100 due to new trait solver not supporting required nightly features"]
 pub type Mat3f = Matrix<f32, 3, 3>;
 /// Identity matrix for f32 3x3 matrix.
+#[allow(deprecated)]
+#[deprecated = "this feature does not work starting with Rust 1.100 due to new trait solver not supporting required nightly features"]
 pub const MAT3F_IDENTITY: Mat3f = Mat3f::IDENTITY;
 
 // https://www.mathsisfun.com/algebra/matrix-multiplying.html
 
 #[cfg(test)]
+#[allow(deprecated)]
 mod tests {
     use super::{Mat3f, Matrix};
 

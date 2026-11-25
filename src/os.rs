@@ -1,3 +1,5 @@
+//! OS-specific APIs.
+
 #[cfg(unix)]
 pub mod unix;
 #[cfg(windows)]

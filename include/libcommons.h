@@ -1,9 +1,5 @@
 #ifndef LIBCOMMONS_H
-#define LIBCOMMONS_H "0.7.0"
-
-#ifndef LIBCOMMONS_PREFIX
-#define LIBCOMMONS_PREFIX libcommons_
-#endif // LIBCOMMONS_PREFIX
+#define LIBCOMMONS_H
 
 #ifndef LIBCOMMONS_ALLOCATOR
 #define LIBCOMMONS_ALLOCATOR malloc
@@ -12,10 +8,6 @@
 #ifndef LIBCOMMONS_DEALLOCATOR
 #define LIBCOMMONS_DEALLOCATOR free
 #endif // LIBCOMMONS_DEALLOCATOR
-
-#define __LIBCOMMONS_PREFIXED(A, B) A##B
-#define _LIBCOMMONS_PREFIXED(A, B) __LIBCOMMONS_PREFIXED(A, B)
-#define LIBCOMMONS_PREFIXED(A) _LIBCOMMONS_PREFIXED(LIBCOMMONS_PREFIX, A)
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -27,23 +19,25 @@
 extern "C" {
 #endif // __cplusplus
 
+#define LIBCOMMONS_LINK_SECTION(X)  __attribute__((section(X)))
+
 /// UTF-8 owned string.
 ///
 /// Libcommons strings are not null terminated.
-typedef struct LIBCOMMONS_PREFIXED(ffi_string_t) {
+typedef struct libcommons_ffi_string {
     char *buf;
     uintptr_t len;
     uintptr_t capacity;
-    void (*drop)(struct LIBCOMMONS_PREFIXED(ffi_string_t) *);
-} LIBCOMMONS_PREFIXED(ffi_string_t);
+    void (*drop)(struct libcommons_ffi_string *);
+} libcommons_ffi_string;
 
 /// Wide pointer to a UTF-8 string slice.
 ///
 /// Libcommons strings are not null terminated.
-typedef struct LIBCOMMONS_PREFIXED(ffi_str_p) {
+typedef struct libcommons_ffi_str {
     char *buf;
     uintptr_t len;
-} LIBCOMMONS_PREFIXED(ffi_str_p);
+} libcommons_ffi_str;
 
 // ffi_string_t
 
@@ -52,12 +46,10 @@ typedef struct LIBCOMMONS_PREFIXED(ffi_str_p) {
 /// If string is empty, no allocation is performed.
 ///
 /// Must be a valid UTF-8 string.
-LIBCOMMONS_PREFIXED(ffi_string_t)
-LIBCOMMONS_PREFIXED(ffi_string_new)(char *cstr);
+libcommons_ffi_string libcommons_ffi_string_new(char *cstr);
 
 /// Convert a string to a string slice.
-LIBCOMMONS_PREFIXED(ffi_str_p)
-LIBCOMMONS_PREFIXED(ffi_string_slice)(LIBCOMMONS_PREFIXED(ffi_string_t) *);
+libcommons_ffi_str libcommons_ffi_string_slice(libcommons_ffi_string *);
 
 /// Append a C string to an FFI string.
 ///
@@ -67,8 +59,7 @@ LIBCOMMONS_PREFIXED(ffi_string_slice)(LIBCOMMONS_PREFIXED(ffi_string_t) *);
 /// deallocation of the old string failed.
 ///
 /// If allocation fails, string length is reset to what it was before.
-int LIBCOMMONS_PREFIXED(ffi_string_push_c)(LIBCOMMONS_PREFIXED(ffi_string_t) *,
-                                           char *cstr);
+int libcommons_ffi_string_push_c(libcommons_ffi_string *, char *cstr);
 
 /// Append an FFI string slice to an FFI string.
 ///
@@ -76,38 +67,41 @@ int LIBCOMMONS_PREFIXED(ffi_string_push_c)(LIBCOMMONS_PREFIXED(ffi_string_t) *,
 /// deallocation of the old string failed.
 ///
 /// If allocation fails, string length is reset to what it was before.
-int LIBCOMMONS_PREFIXED(ffi_string_push_ffi)(
-    LIBCOMMONS_PREFIXED(ffi_string_t) *, LIBCOMMONS_PREFIXED(ffi_str_p) str);
+int libcommons_ffi_string_push_ffi(libcommons_ffi_string *, libcommons_ffi_str str);
 
 /// Free an FFI string.
 ///
 /// Internal `drop` method must set all values to 0.
-void LIBCOMMONS_PREFIXED(ffi_string_free)(LIBCOMMONS_PREFIXED(ffi_string_t) *);
+void libcommons_ffi_string_free(libcommons_ffi_string *);
 
-// ffi_str_p
-
-/// Create a new FFI string slice referencing a C string.
-///
-/// Must be a valid UTF-8 string and remain valid for the
-/// entire duration of its usage.
-LIBCOMMONS_PREFIXED(ffi_str_p) LIBCOMMONS_PREFIXED(ffi_str_new)(char *cstr);
+// ffi_str
 
 /// Create a new FFI string slice referencing a C string.
 ///
 /// Must be a valid UTF-8 string and remain valid for the
 /// entire duration of its usage.
-bool LIBCOMMONS_PREFIXED(ffi_str_eq)(LIBCOMMONS_PREFIXED(ffi_str_p) one,
-                                     LIBCOMMONS_PREFIXED(ffi_str_p) other);
+libcommons_ffi_str libcommons_ffi_str_new(char *cstr);
+
+/// Create a new FFI string slice referencing a C string.
+///
+/// Must be a valid UTF-8 string and remain valid for the
+/// entire duration of its usage.
+bool libcommons_ffi_str_eq(libcommons_ffi_str one, libcommons_ffi_str other);
 
 /// Create a substring from slice.
-LIBCOMMONS_PREFIXED(ffi_str_p)
-LIBCOMMONS_PREFIXED(ffi_str_substr)(LIBCOMMONS_PREFIXED(ffi_str_p) str,
-                                    uintptr_t start, uintptr_t len);
+libcommons_ffi_str libcommons_ffi_str_substr(libcommons_ffi_str str, uintptr_t start, uintptr_t len);
+
+/// Version of libcommons library.
+///
+/// This symbol is not affected by LIBCOMMONS_STRIP_PREFIX.
+static const libcommons_ffi_str libcommons_version = {
+    .buf = (char *) "0.8.0",
+    .len = 5,
+};
 
 #ifdef LIBCOMMONS_IMPLEMENTATION
 
-void __libcommons_internal_string_t_drop(LIBCOMMONS_PREFIXED(ffi_string_t) *
-                                         self) {
+void __libcommons_internal_string_t_drop(libcommons_ffi_string *self) {
     if (self->buf != NULL)
         free(self->buf);
 }
@@ -117,13 +111,11 @@ void __libcommons_internal_string_t_drop(LIBCOMMONS_PREFIXED(ffi_string_t) *
 /// If string is empty, no allocation is performed.
 ///
 /// Must be a valid UTF-8 string.
-LIBCOMMONS_PREFIXED(ffi_string_t)
-LIBCOMMONS_PREFIXED(ffi_string_new)(char *cstr) {
+libcommons_ffi_string libcommons_ffi_string_new(char *cstr) {
     uintptr_t len = strlen(cstr);
 
     if (len == 0) {
-        LIBCOMMONS_PREFIXED(ffi_string_t)
-        value = {
+        libcommons_ffi_string value = {
             .buf = NULL,
             .len = 0,
             .capacity = 0,
@@ -134,8 +126,7 @@ LIBCOMMONS_PREFIXED(ffi_string_new)(char *cstr) {
 
     char *buf = (char *)LIBCOMMONS_ALLOCATOR(len);
     memcpy((void *)buf, (void *)cstr, len);
-    LIBCOMMONS_PREFIXED(ffi_string_t)
-    value = {
+    libcommons_ffi_string value = {
         .buf = buf,
         .len = len,
         .capacity = len,
@@ -145,10 +136,8 @@ LIBCOMMONS_PREFIXED(ffi_string_new)(char *cstr) {
 }
 
 /// Convert a string to a string slice.
-LIBCOMMONS_PREFIXED(ffi_str_p)
-LIBCOMMONS_PREFIXED(ffi_string_slice)(LIBCOMMONS_PREFIXED(ffi_string_t) * str) {
-    LIBCOMMONS_PREFIXED(ffi_str_p)
-    value = {
+libcommons_ffi_str libcommons_ffi_string_slice(libcommons_ffi_string *str) {
+    libcommons_ffi_str value = {
         .buf = str->buf,
         .len = str->len,
     };
@@ -163,9 +152,7 @@ LIBCOMMONS_PREFIXED(ffi_string_slice)(LIBCOMMONS_PREFIXED(ffi_string_t) * str) {
 /// deallocation of the old string failed, -3 if string length has overflowed.
 ///
 /// If allocation fails, string length is reset to what it was before.
-int LIBCOMMONS_PREFIXED(ffi_string_push_c)(LIBCOMMONS_PREFIXED(ffi_string_t) *
-                                               self,
-                                           char *cstr) {
+int libcommons_ffi_string_push_c(libcommons_ffi_string *self, char *cstr) {
     uintptr_t cstrlen = strlen(cstr) - 1;
     if (cstrlen == 0)
         return 0;
@@ -210,10 +197,8 @@ int LIBCOMMONS_PREFIXED(ffi_string_push_c)(LIBCOMMONS_PREFIXED(ffi_string_t) *
 /// deallocation of the old string failed.
 ///
 /// If allocation fails, string length is reset to what it was before.
-int LIBCOMMONS_PREFIXED(ffi_string_push_ffi)(LIBCOMMONS_PREFIXED(ffi_string_t) *
-                                                 self,
-                                             LIBCOMMONS_PREFIXED(ffi_str_p)
-                                                 str) {
+int libcommons_ffi_string_push_ffi(
+    libcommons_ffi_string * self, libcommons_ffi_str str) {
     if (str.len == 0)
         return 0;
 
@@ -254,33 +239,29 @@ int LIBCOMMONS_PREFIXED(ffi_string_push_ffi)(LIBCOMMONS_PREFIXED(ffi_string_t) *
 /// Free an FFI string.
 ///
 /// Will call the internal `drop` method and set all values to 0.
-void LIBCOMMONS_PREFIXED(ffi_string_free)(LIBCOMMONS_PREFIXED(ffi_string_t) *
-                                          self) {
+void libcommons_ffi_string_free(libcommons_ffi_string *self) {
     self->drop(self);
-    memset(self, 0, sizeof(LIBCOMMONS_PREFIXED(ffi_string_t)));
+    memset(self, 0, sizeof(libcommons_ffi_string));
 }
 
-// ffi_str_p
+// ffi_str
 
 /// Create a new FFI string slice referencing a C string.
 ///
 /// Must be a valid UTF-8 string and remain valid for the
 /// entire duration of its usage.
-LIBCOMMONS_PREFIXED(ffi_str_p)
-LIBCOMMONS_PREFIXED(ffi_str_new)(char *cstr) {
+libcommons_ffi_str libcommons_ffi_str_new(char *cstr) {
     uintptr_t len = strlen(cstr);
 
     if (len == 0) {
-        LIBCOMMONS_PREFIXED(ffi_str_p)
-        value = {
+        libcommons_ffi_str value = {
             .buf = NULL,
             .len = 0,
         };
         return value;
     }
 
-    LIBCOMMONS_PREFIXED(ffi_str_p)
-    value = {
+    libcommons_ffi_str value = {
         .buf = cstr,
         .len = len,
     };
@@ -291,8 +272,7 @@ LIBCOMMONS_PREFIXED(ffi_str_new)(char *cstr) {
 ///
 /// Must be a valid UTF-8 string and remain valid for the
 /// entire duration of its usage.
-bool LIBCOMMONS_PREFIXED(ffi_str_eq)(LIBCOMMONS_PREFIXED(ffi_str_p) one,
-                                     LIBCOMMONS_PREFIXED(ffi_str_p) other) {
+bool libcommons_ffi_str_eq(libcommons_ffi_str one, libcommons_ffi_str other) {
     if (one.len != other.len)
         return false;
 
@@ -304,12 +284,9 @@ bool LIBCOMMONS_PREFIXED(ffi_str_eq)(LIBCOMMONS_PREFIXED(ffi_str_p) one,
 }
 
 /// Create a substring from slice.
-LIBCOMMONS_PREFIXED(ffi_str_p)
-LIBCOMMONS_PREFIXED(ffi_str_substr)(LIBCOMMONS_PREFIXED(ffi_str_p) str,
-                                    uintptr_t start, uintptr_t len) {
+libcommons_ffi_str libcommons_ffi_str_substr(libcommons_ffi_str str, uintptr_t start, uintptr_t len) {
     if (start >= str.len) {
-        LIBCOMMONS_PREFIXED(ffi_str_p)
-        value = {
+        libcommons_ffi_str value = {
             .buf = NULL,
             .len = 0,
         };
@@ -320,8 +297,7 @@ LIBCOMMONS_PREFIXED(ffi_str_substr)(LIBCOMMONS_PREFIXED(ffi_str_p) str,
     if (start + len > str.len)
         new_len = str.len - start;
 
-    LIBCOMMONS_PREFIXED(ffi_str_p)
-    value = {
+    libcommons_ffi_str value = {
         .buf = str.buf + start,
         .len = new_len,
     };
@@ -329,6 +305,81 @@ LIBCOMMONS_PREFIXED(ffi_str_substr)(LIBCOMMONS_PREFIXED(ffi_str_p) str,
 }
 
 #endif // LIBCOMMONS_IMPLEMENTATION
+
+#ifdef LIBCOMMONS_STRIP_PREFIX
+
+#define LINK_SECTION(X) LIBCOMMONS_LINK_SECTION(X)
+
+typedef libcommons_ffi_string ffi_string;
+typedef libcommons_ffi_str ffi_str;
+
+// ffi_string_t
+
+/// Allocate a new FFI string via a C string.
+///
+/// If string is empty, no allocation is performed.
+///
+/// Must be a valid UTF-8 string.
+static inline ffi_string ffi_string_new(char *cstr) { return libcommons_ffi_string_new(cstr); }
+
+/// Convert a string to a string slice.
+static inline libcommons_ffi_str ffi_string_slice(libcommons_ffi_string *self) {
+    return libcommons_ffi_string_slice(self);
+}
+
+/// Append a C string to an FFI string.
+///
+/// Must be a valid UTF-8 string.
+///
+/// Returns 0 on success, -1 if allocation of a new string failed, -2 if
+/// deallocation of the old string failed.
+///
+/// If allocation fails, string length is reset to what it was before.
+static inline int ffi_string_push_c(libcommons_ffi_string *self, char *cstr) {
+    return libcommons_ffi_string_push_c(self, cstr);
+}
+
+/// Append an FFI string slice to an FFI string.
+///
+/// Returns 0 on success, -1 if allocation of a new string failed, -2 if
+/// deallocation of the old string failed.
+///
+/// If allocation fails, string length is reset to what it was before.
+static inline int ffi_string_push_ffi(libcommons_ffi_string *self, libcommons_ffi_str str) {
+    return libcommons_ffi_string_push_ffi(self, str);
+}
+
+/// Free an FFI string.
+///
+/// Internal `drop` method must set all values to 0.
+static inline void ffi_string_free(libcommons_ffi_string *self) {
+    return libcommons_ffi_string_free(self);
+}
+
+// ffi_str
+
+/// Create a new FFI string slice referencing a C string.
+///
+/// Must be a valid UTF-8 string and remain valid for the
+/// entire duration of its usage.
+static inline libcommons_ffi_str ffi_str_new(char *cstr) {
+    return libcommons_ffi_str_new(cstr);
+}
+
+/// Create a new FFI string slice referencing a C string.
+///
+/// Must be a valid UTF-8 string and remain valid for the
+/// entire duration of its usage.
+static inline bool ffi_str_eq(libcommons_ffi_str one, libcommons_ffi_str other) {
+    return libcommons_ffi_str_eq(one, other);
+}
+
+/// Create a substring from slice.
+static inline libcommons_ffi_str ffi_str_substr(libcommons_ffi_str str, uintptr_t start, uintptr_t len) {
+    return libcommons_ffi_str_substr(str, start, len);
+}
+
+#endif // LIBCOMMONS_STRIP_PREFIX
 
 #ifdef __cplusplus
 }

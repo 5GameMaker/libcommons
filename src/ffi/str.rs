@@ -1,11 +1,5 @@
 use std::{
-    borrow::Borrow,
-    ffi::c_char,
-    fmt::{Debug, Display},
-    marker::PhantomData,
-    mem::{forget, transmute},
-    ptr::null_mut,
-    slice,
+    borrow::Borrow, ffi::{CStr, c_char}, fmt::{Debug, Display}, marker::PhantomData, mem::{forget, transmute}, ptr::null_mut, slice,
 };
 
 unsafe extern "C" fn __libcommons_rust_drop(string: *mut FfiString) {
@@ -17,6 +11,68 @@ unsafe extern "C" fn __libcommons_rust_drop(string: *mut FfiString) {
             string.capacity,
         ));
     }
+}
+
+/// A string containing valid UTF-8 data.
+///
+/// On Unix is implemented for [OsStr][std::ffi::OsStr].
+pub trait StrKind {
+    #[must_use]
+    fn as_bytes(&self) -> &[u8];
+}
+impl StrKind for &str {
+    fn as_bytes(&self) -> &[u8] {
+        (*self).as_bytes()
+    }
+}
+#[cfg(unix)]
+impl StrKind for &std::ffi::OsStr {
+    fn as_bytes(&self) -> &[u8] {
+        std::os::unix::ffi::OsStrExt::as_bytes(*self)
+    }
+}
+impl StrKind for &CStr {
+    fn as_bytes(&self) -> &[u8] {
+        self.to_bytes()
+    }
+}
+
+/// Convert a byte or a byte array into a `c_char` or a `c_char` array respectively.
+pub trait ByteToChar<T> {
+    #[must_use]
+    fn cast(self) -> T;
+}
+impl ByteToChar<u8> for u8 {
+    #[inline(always)]
+    fn cast(self) -> u8 { self }
+}
+impl ByteToChar<i8> for u8 {
+    #[inline(always)]
+    fn cast(self) -> i8 { self.cast_signed() }
+}
+impl<'a> ByteToChar<&'a [u8]> for &'a [u8] {
+    #[inline(always)]
+    fn cast(self) -> &'a [u8] { self }
+}
+impl<'a> ByteToChar<&'a [i8]> for &'a [u8] {
+    #[inline(always)]
+    fn cast(self) -> &'a [i8] { unsafe { std::mem::transmute(self) } }
+}
+impl<'a, const LEN: usize> ByteToChar<[u8; LEN]> for [u8; LEN] {
+    #[inline(always)]
+    fn cast(self) -> [u8; LEN] { self }
+}
+impl<'a, const LEN: usize> ByteToChar<[i8; LEN]> for [u8; LEN] {
+    #[inline(always)]
+    fn cast(self) -> [i8; LEN] { self.map(|x| x.cast_signed()) }
+}
+pub fn str_to_c_str<'b, S: StrKind>(str: S, buf: &'b mut [u8]) -> Option<&'b [c_char]> {
+    if str.as_bytes().len().checked_add(1).is_none_or(|x| x > buf.len()) { return None }
+
+    let bytes = str.as_bytes();
+    buf[..bytes.len()].copy_from_slice(bytes);
+    buf[bytes.len()] = 0;
+    Some(buf[..bytes.len() + 1].as_ref().cast())
 }
 
 /// An FFI-compatible string slice.
@@ -369,11 +425,8 @@ impl FfiString {
     ///
     /// assert_eq!(string, "Hello, C");
     /// ```
-    #[cfg(feature = "str")]
     pub fn push(&mut self, char: char) {
-        let mut stackstr = crate::str::stack::StackString::<4>::new();
-        stackstr.push(char).unwrap();
-        self.push_str(&stackstr);
+        self.push_str(char.encode_utf8(&mut [0; 16]));
     }
 }
 impl Drop for FfiString {
