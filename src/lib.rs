@@ -16,6 +16,8 @@ mod r#gen {
     include!(concat!(env!("OUT_DIR"), "/gen.rs"));
 }
 
+#[cfg(feature = "args")]
+pub mod args;
 #[cfg(feature = "ffi")]
 pub mod ffi;
 #[cfg(feature = "dirs")]
