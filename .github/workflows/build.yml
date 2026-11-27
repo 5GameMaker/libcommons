@@ -93,3 +93,28 @@ jobs:
       - run: cargo test --target=aarch64-pc-windows-msvc --features=full
       - run: cargo test --target=aarch64-pc-windows-msvc --features=full-nightly
 
+  aarch64-apple-darwin:
+    name: Test on aarch64-apple-darwin
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions-rust-lang/setup-rust-toolchain@v2
+        with:
+          target: aarch64-apple-darwin
+          toolchain: nightly
+      - run: cargo test --target=aarch64-apple-darwin
+      - run: cargo test --target=aarch64-apple-darwin --features=full
+      - run: cargo test --target=aarch64-apple-darwin --features=full-nightly
+  x86_64-apple-darwin:
+    name: Test on x86_64-apple-darwin
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions-rust-lang/setup-rust-toolchain@v2
+        with:
+          target: x86_64-apple-darwin
+          toolchain: nightly
+      - run: cargo test --target=x86_64-apple-darwin
+      - run: cargo test --target=x86_64-apple-darwin --features=full
+      - run: cargo test --target=x86_64-apple-darwin --features=full-nightly
+
