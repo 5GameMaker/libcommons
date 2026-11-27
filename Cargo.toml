@@ -9,6 +9,9 @@ license = "MIT"
 keywords = ["common", "ffi"]
 categories = ["development-tools::ffi"]
 
+[package.metadata.docs.rs]
+features = ["full-nightly"]
+
 [features]
 default = []
 

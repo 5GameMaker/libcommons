@@ -2,8 +2,6 @@
 
 use std::borrow::Cow;
 
-use crate::util::Fun;
-
 /// Split a single arg into a parameter and a value.
 ///
 /// ```
@@ -131,6 +129,7 @@ impl Iterator for ArgsIter {
         })
     }
 }
+impl Default for ArgsIter { fn default() -> Self { Self::new() } }
 
 pub enum SomeArgsIter {
     Args(ArgsIter),

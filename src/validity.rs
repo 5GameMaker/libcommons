@@ -9,6 +9,13 @@ use std::{borrow::Borrow, fmt::Debug, hint::black_box, mem::MaybeUninit, ops::{D
 /// Implementors of [Drop] and [Validate] should not rely on [Validate::is_valid]
 /// in the implementation of [Drop::drop] as those objects are not
 /// supposed to be created normally, much less be dropped.
+///
+/// ## Safety
+///
+/// While this trait may be implemented for any type, it must be implemented in a way
+/// that in safe code [is_valid][Validate::is_valid] always returns `true`. `false` is
+/// only ever returned if an object's state was violated. By
+/// [create_invalid][HasInvalidStates::create_invalid] or similar methods.
 pub unsafe trait Validate {
     /// Validate this object.
     ///
@@ -26,13 +33,16 @@ pub unsafe trait Validate {
 /// Whether an object has no invalid states.
 ///
 /// This guaranteed that you can allocate an array of the size of
-/// this object fill it with random bytes, transmute it, and it
+/// this object, fill it with random bytes, transmute it, and it
 /// will never create an invalid object, and that calling
 /// [Validate::is_valid] on it will always return `true`.
 ///
 /// This trait is implemented for all primitive types.
 ///
-/// Implementing both [NoInvalidStates] and [HasInvalidStates] is unsound.
+/// ## Safety
+///
+/// This trait must only be implemented for types for which this constraint
+/// applies. Implementing both [NoInvalidStates] and [HasInvalidStates] is unsound.
 pub unsafe trait NoInvalidStates {}
 unsafe impl<T: ?Sized + NoInvalidStates> Validate for T {
     fn is_valid(&self) -> bool { true }
@@ -42,12 +52,21 @@ unsafe impl<T: ?Sized + NoInvalidStates> Validate for T {
 /// This trait is implemented for all non-zero types and references,
 /// as well as some convenient wrappers like [AlwaysSome].
 ///
+/// ## Safety
+///
+/// This trait must be implemented following the constraints of [Validate].
+///
 /// Implementing both [NoInvalidStates] and [HasInvalidStates] is unsound.
 pub unsafe trait HasInvalidStates: Validate {
     /// Create an invalid instance.
     ///
     /// For this object, [Validate::is_valid] is guaranteed to return
     /// `false`.
+    ///
+    /// ## Safety
+    ///
+    /// Invalid objects must be handled with caution. Not doing so may
+    /// easily lead to undefined behavior.
     unsafe fn create_invalid() -> MaybeUninit<Self>
     where Self: Sized;
 }

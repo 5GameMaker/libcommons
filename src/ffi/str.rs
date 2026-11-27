@@ -58,15 +58,15 @@ impl<'a> ByteToChar<&'a [i8]> for &'a [u8] {
     #[inline(always)]
     fn cast(self) -> &'a [i8] { unsafe { std::mem::transmute(self) } }
 }
-impl<'a, const LEN: usize> ByteToChar<[u8; LEN]> for [u8; LEN] {
+impl<const LEN: usize> ByteToChar<[u8; LEN]> for [u8; LEN] {
     #[inline(always)]
     fn cast(self) -> [u8; LEN] { self }
 }
-impl<'a, const LEN: usize> ByteToChar<[i8; LEN]> for [u8; LEN] {
+impl<const LEN: usize> ByteToChar<[i8; LEN]> for [u8; LEN] {
     #[inline(always)]
     fn cast(self) -> [i8; LEN] { self.map(|x| x.cast_signed()) }
 }
-pub fn str_to_c_str<'b, S: StrKind>(str: S, buf: &'b mut [u8]) -> Option<&'b [c_char]> {
+pub fn str_to_c_str<S: StrKind>(str: S, buf: &mut [u8]) -> Option<&[c_char]> {
     if str.as_bytes().len().checked_add(1).is_none_or(|x| x > buf.len()) { return None }
 
     let bytes = str.as_bytes();

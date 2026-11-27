@@ -28,6 +28,7 @@ mod __inner {
     ///     Some(x) => x.take().drop(),
     /// }
     /// ```
+    #[allow(unused)]
     pub trait Fun {
         /// Drop self and return another value.
         ///
@@ -331,24 +332,8 @@ mod __inner {
     }
 
     /// Extensions for immutable slices.
+    #[allow(unused)]
     pub trait SliceExt {
-        /// Obtain the underlying bytes of this slice.
-        ///
-        #[cfg_attr(feature = "extra_traits", doc = "```")]
-        #[cfg_attr(not(feature = "extra_traits"), doc = "```ignore")]
-        /// use libcommons::util::SliceExt;
-        ///
-        /// let mut nums = [1i32; 4];
-        /// unsafe {
-        ///     let num = 1i32.to_ne_bytes();
-        ///     for c in nums.as_u8_slice().chunks(4) {
-        ///         assert_eq!(c, &num);
-        ///     }
-        /// }
-        /// ```
-        unsafe fn as_u8_slice(&self) -> &[u8];
-    }
-    impl<T> SliceExt for &[T] {
         /// Obtain the underlying bytes of this slice.
         ///
         #[cfg_attr(feature = "extra_traits", doc = "```")]
@@ -366,8 +351,11 @@ mod __inner {
         ///
         /// ## Safety
         ///
-        /// With this method it is really easy to violate the integrity of
-        /// an object. Use it carefully.
+        /// Since Rust objects have undefined layout, this method should not
+        /// be relied on unless you really know what you're doing.
+        unsafe fn as_u8_slice(&self) -> &[u8];
+    }
+    impl<T> SliceExt for &[T] {
         unsafe fn as_u8_slice(&self) -> &[u8] { unsafe {
             let range = self.as_ptr_range();
             let start = range.start.cast::<u8>();
@@ -377,7 +365,30 @@ mod __inner {
     }
 
     /// Extensions for mutable slices.
+    #[allow(unused)]
     pub trait SliceMutExt: SliceExt {
+        /// Obtain the underlying bytes of this slice.
+        ///
+        #[cfg_attr(feature = "extra_traits", doc = "```")]
+        #[cfg_attr(not(feature = "extra_traits"), doc = "```ignore")]
+        /// use libcommons::util::SliceMutExt;
+        ///
+        /// let mut nums = [1i32; 4];
+        /// unsafe {
+        ///     let num = 2i32.to_ne_bytes();
+        ///     for c in nums.as_u8_slice_mut().chunks_mut(4) {
+        ///         c.copy_from_slice(&num);
+        ///     }
+        /// }
+        /// for n in nums {
+        ///     assert_eq!(n, 2);
+        /// }
+        /// ```
+        ///
+        /// ## Safety
+        ///
+        /// With this method it is really easy to violate the integrity of
+        /// an object. Use it carefully.
         unsafe fn as_u8_slice_mut(&mut self) -> &mut [u8];
     }
     impl<T> SliceExt for &mut [T] {
@@ -431,6 +442,7 @@ mod __inner {
         } }
     }
 
+    #[allow(unused)]
     pub trait ResultExt<T, E> {
         /// Deflate error.
         ///
@@ -483,6 +495,7 @@ mod __inner {
 
 #[cfg(feature = "extra_traits")]
 pub use __inner::*;
+#[allow(unused)]
 #[cfg(not(feature = "extra_traits"))]
 pub(crate) use __inner::*;
 
@@ -601,18 +614,10 @@ impl<Anc, T: PartialEq<T>> PartialEq for Use<Anc, T> {
     fn eq(&self, other: &Self) -> bool {
         self.value == other.value
     }
-
-    fn ne(&self, other: &Self) -> bool {
-        self.value != other.value
-    }
 }
 impl<Anc, T: PartialEq<T>> PartialEq<T> for Use<Anc, T> {
     fn eq(&self, other: &T) -> bool {
         self.value == *other
-    }
-
-    fn ne(&self, other: &T) -> bool {
-        self.value != *other
     }
 }
 impl<Anc, T> Deref for Use<Anc, T> {
@@ -644,8 +649,10 @@ pub fn zeroed<T: Zeroable>() -> T { T::zeroed() }
 
 /// Mark object as being safe to call [zeroed][std::mem::zeroed] on.
 ///
-/// Implementing this trait for a type for which 0-state is not valid
-/// is a logical bug.
+/// ## Safety
+///
+/// This trait must only be implemented for types for which zeroed state is
+/// valid. Not satisfying this constraint could lead to undefined behavior.
 pub unsafe trait Zeroable {
     /// Create a zeroed object.
     #[must_use]
@@ -671,7 +678,7 @@ pub fn new_buffer_zeroed<T: Zeroable>(len: usize) -> Box<[T]> { unsafe {
     let mut vec = Vec::<T>::new();
     vec.reserve_exact(len);
     vec.set_len(len);
-    let range = vec.as_slice().as_ptr_range();
+    let range = vec.as_ptr_range();
     let start = range.start.cast::<u8>().cast_mut();
     let end = range.end.cast::<u8>().cast_mut();
     std::slice::from_raw_parts_mut(start, start.addr().abs_diff(end.addr())).fill(0);

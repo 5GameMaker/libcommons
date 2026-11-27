@@ -1,0 +1,42 @@
+name: Build and test libcommons
+on: push
+permissions:
+  contents: read
+jobs:
+  x86_64_linux_unknown_gnu:
+    name: Test on x86_64-linux-unknown-gnu
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions-rust-lang/setup-rust-toolchain@v2
+        with:
+          toolchain: nightly
+      - run: cargo test
+      - run: cargo test --features=full
+      - run: cargo test --features=full-nightly
+  x86_64_linux_unknown_musl:
+    name: Test on x86_64-linux-unknown-musl
+    runs-on: ubuntu-latest
+    steps:
+      - run: apt-get install -y musl-tools
+      - uses: actions/checkout@v6
+      - uses: actions-rust-lang/setup-rust-toolchain@v2
+        with:
+          target: x86_64-unknown-linux-musl
+          toolchain: nightly
+      - run: cargo test --target=x86_64-unknown-linux-musl
+      - run: cargo test --target=x86_64-unknown-linux-musl --features=full
+      - run: cargo test --target=x86_64-unknown-linux-musl --features=full-nightly
+  x86_64_pc-windows-msvc:
+    name: Test on x86_64_pc-windows-msvc
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions-rust-lang/setup-rust-toolchain@v2
+        with:
+          target: x86_64_pc-windows-msvc
+          toolchain: nightly
+      - run: cargo test --target=x86_64_pc-windows-msvc
+      - run: cargo test --target=x86_64-pc-windows-msvc --features=full
+      - run: cargo test --target=x86_64-pc-windows-msvc --features=full-nightly
+

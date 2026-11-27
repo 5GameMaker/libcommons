@@ -197,7 +197,7 @@ impl LibraryFile {
                 if lib.ehdr().e_shentsize as usize != size_of::<Elf32_Shdr>() { notelf!() }
                 let Ok(shoff) = TryInto::<usize>::try_into(lib.ehdr().e_shoff) else { notelf!() };
                 if shoff >= lib.data().len() { notelf!() }
-                if lib.ehdr().e_shoff % align_of::<Elf32_Shdr>() as u32 != 0 { notelf!() }
+                if !lib.ehdr().e_shoff.is_multiple_of(align_of::<Elf32_Shdr>() as u32) { notelf!() }
                 let shdrs = lib.shdrs();
                 let shdrs_bytes = shdrs.as_u8_slice();
                 if lib.data().len() < lib.shdrs().as_ptr().addr() - (lib.ehdr() as *const Elf32_Ehdr).addr()
@@ -233,7 +233,7 @@ impl LibraryFile {
                 if lib.ehdr().e_shentsize as usize != size_of::<Elf64_Shdr>() { notelf!() }
                 let Ok(shoff) = TryInto::<usize>::try_into(lib.ehdr().e_shoff) else { notelf!() };
                 if shoff >= lib.data().len() { notelf!() }
-                if lib.ehdr().e_shoff % align_of::<Elf64_Shdr>() as u64 != 0 { notelf!() }
+                if !lib.ehdr().e_shoff.is_multiple_of(align_of::<Elf64_Shdr>() as u64) { notelf!() }
                 let shdrs = lib.shdrs();
                 let shdrs_bytes = shdrs.as_u8_slice();
                 if lib.data().len() < lib.shdrs().as_ptr().addr() - (lib.ehdr() as *const Elf64_Ehdr).addr()
@@ -263,7 +263,7 @@ impl LibraryFile {
 
                 Self::E64(lib).instead_map(Ok)
             }
-            _ => return Err(io::Error::new(io::ErrorKind::InvalidData, "invalid class")),
+            _ => Err(io::Error::new(io::ErrorKind::InvalidData, "invalid class")),
         }
     } }
     

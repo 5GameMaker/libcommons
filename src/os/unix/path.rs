@@ -13,7 +13,7 @@ pub trait PathExt {
     /// The buffer must have enough space for the contents of `self`
     /// as well as for a trailing NULL byte.
     #[must_use]
-    fn as_c_str<'a, 'b>(&'a self, buf: &'b mut [u8]) -> Option<&'b [c_char]>;
+    fn as_c_str<'a>(&self, buf: &'a mut [u8]) -> Option<&'a [c_char]>;
 
     /// Return a new byte buffer containing the path.
     ///
@@ -29,7 +29,7 @@ pub trait PathExt {
     }
 }
 impl PathExt for &Path {
-    fn as_c_str<'a, 'b>(&'a self, buf: &'b mut [u8]) -> Option<&'b [c_char]> {
+    fn as_c_str<'a>(&self, buf: &'a mut [u8]) -> Option<&'a [c_char]> {
         str_to_c_str(self.as_os_str(), buf)
     }
 }

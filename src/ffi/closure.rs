@@ -1,3 +1,5 @@
+#![allow(clippy::too_many_arguments)]
+
 use std::{ffi::c_void, marker::PhantomData, mem::transmute};
 
 /// A more explicit syntax for [Closure].
@@ -71,9 +73,7 @@ macro_rules! impl_closure {
                                 data($($arg),*)
                             }
                         }
-                        unsafe { transmute::<
-                            extern "C" fn(data: *const c_void $(,$arg: $ge)*) -> R,
-                            *const c_void>(run::<$($ge,)* R, F>) }
+                        run::<$($ge,)* R, F> as *const c_void
                     },
                     _phantom: PhantomData,
                 }
@@ -123,9 +123,7 @@ macro_rules! impl_closure {
                                 data($($arg),*)
                             }
                         }
-                        unsafe { transmute::<
-                            extern "C" fn(data: *mut c_void $(,$arg: $ge)*) -> R,
-                            *const c_void>(run::<$($ge,)* R, F>) }
+                        run::<$($ge,)* R, F> as *const c_void
                     },
                     _phantom: PhantomData,
                 }
@@ -169,17 +167,15 @@ macro_rules! impl_closure {
                                 data($($arg),*)
                             }
                         }
-                        unsafe { transmute::<
-                            extern "C" fn(data: *mut c_void $(,$arg: $ge)*) -> R,
-                            *const c_void>(run::<$($ge,)* R, F>) }
+                        run::<$($ge,)* R, F> as *const c_void
                     },
                     drop: {
-                        extern "C" fn run<$($ge,)* R, F: FnOnce($($ge),*) -> R>(data: *mut c_void) {
+                        extern "C" fn run<T>(data: *mut c_void) {
                             unsafe {
-                                std::ptr::drop_in_place(data);
+                                std::ptr::drop_in_place(data.cast::<T>());
                             }
                         }
-                        run::<$($ge,)* R, F>
+                        run::<Self>
                     },
                     _phantom: PhantomData,
                 }
@@ -223,3 +219,7 @@ impl_closure!([0] arg0 A0 [1] arg1 A1 [2] arg2 A2 [3] arg3 A3 [4] arg4 A4 [5] ar
 impl_closure!([0] arg0 A0 [1] arg1 A1 [2] arg2 A2 [3] arg3 A3 [4] arg4 A4 [5] arg5 A5 [6] arg6 A6 [7] arg7 A7 [8] arg8 A8 [9] arg9 A9 [10] arg10 A10);
 impl_closure!([0] arg0 A0 [1] arg1 A1 [2] arg2 A2 [3] arg3 A3 [4] arg4 A4 [5] arg5 A5 [6] arg6 A6 [7] arg7 A7 [8] arg8 A8 [9] arg9 A9 [10] arg10 A10 [11] arg11 A11);
 impl_closure!([0] arg0 A0 [1] arg1 A1 [2] arg2 A2 [3] arg3 A3 [4] arg4 A4 [5] arg5 A5 [6] arg6 A6 [7] arg7 A7 [8] arg8 A8 [9] arg9 A9 [10] arg10 A10 [11] arg11 A11 [12] arg12 A12);
+
+impl<'a, T: ?Sized> Drop for ClosureOnce<'a, T> {
+    fn drop(&mut self) { (self.drop)(self.data) }
+}

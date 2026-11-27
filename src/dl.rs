@@ -31,7 +31,7 @@ impl Library {
     /// - On Unix uses `dlopen`.
     #[cfg(unix)]
     pub fn open<S: AsRef<Path>>(path: S) -> io::Result<Self> {
-        Handle::open(path).map(|x| Self(x))
+        Handle::open(path).map(Self)
     }
 
     /// Load a symbol.
@@ -64,7 +64,7 @@ pub struct LibraryFile(
 impl LibraryFile {
     pub fn open<S: AsRef<Path>>(path: S) -> io::Result<Self> {
         #[cfg(unix)]
-        return crate::os::unix::dl::LibraryFile::open(path).map(|x| Self(x));
+        return crate::os::unix::dl::LibraryFile::open(path).map(Self);
 
         #[allow(unreachable_code)]
         Err(io::Error::new(io::ErrorKind::Unsupported, "not supported on this platform"))
