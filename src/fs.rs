@@ -2,6 +2,7 @@
 use std::path::PathBuf;
 
 #[cfg(feature = "dirs")]
+#[deprecated = "I decided that the API for this is meh and will be redoing it"]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum DirRel {
     /// User-specific dir.
@@ -10,6 +11,7 @@ pub enum DirRel {
     System,
 }
 #[cfg(feature = "dirs")]
+#[allow(deprecated)]
 impl DirRel {
     pub fn dir(self, ty: DirType) -> Option<PathBuf> {
         #[cfg(unix)]
@@ -23,6 +25,7 @@ impl DirRel {
 }
 
 #[cfg(feature = "dirs")]
+#[deprecated = "I decided that the API for this is meh and will be redoing it"]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum DirType {
     /// Home directory.
@@ -48,6 +51,7 @@ pub enum DirType {
     Lib,
 }
 #[cfg(feature = "dirs")]
+#[allow(deprecated)]
 impl DirType {
     pub fn dir(self, rel: DirRel) -> Option<PathBuf> {
         #[cfg(unix)]
