@@ -14,6 +14,11 @@ impl DirRel {
     pub fn dir(self, ty: DirType) -> Option<PathBuf> {
         #[cfg(unix)]
         { crate::os::unix::dirs::dir(self, ty) }
+        #[cfg(not(unix))]
+        {
+            _ = ty;
+            None
+        }
     }
 }
 
@@ -47,5 +52,10 @@ impl DirType {
     pub fn dir(self, rel: DirRel) -> Option<PathBuf> {
         #[cfg(unix)]
         { crate::os::unix::dirs::dir(rel, self) }
+        #[cfg(not(unix))]
+        {
+            _ = ty;
+            None
+        }
     }
 }

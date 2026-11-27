@@ -43,66 +43,53 @@ jobs:
       - run: cargo test --target=x86_64-pc-windows-msvc --features=full
       - run: cargo test --target=x86_64-pc-windows-msvc --features=full-nightly
 
-  arm-unknown-linux-gnueabi:
-    name: Test on arm-unknown-linux-gnueabi
+  aarch64-unknown-linux-gnu:
+    name: Test on aarch64-unknown-linux-gnu
     runs-on: ubuntu-26.04-arm
     steps:
       - uses: actions/checkout@v6
       - uses: actions-rust-lang/setup-rust-toolchain@v2
         with:
-          target: arm-unknown-linux-gnueabi
+          target: aarch64-unknown-linux-gnu
           toolchain: nightly
-      - run: cargo test --target=arm-unknown-linux-gnueabi
-      - run: cargo test --target=arm-unknown-linux-gnueabi --features=full
-      - run: cargo test --target=arm-unknown-linux-gnueabi --features=full-nightly
-  arm-unknown-linux-gnueabihf:
-    name: Test on arm-unknown-linux-gnueabihf
-    runs-on: ubuntu-26.04-arm
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions-rust-lang/setup-rust-toolchain@v2
-        with:
-          target: arm-unknown-linux-gnueabihf
-          toolchain: nightly
-      - run: cargo test --target=arm-unknown-linux-gnueabihf
-      - run: cargo test --target=arm-unknown-linux-gnueabihf --features=full
-      - run: cargo test --target=arm-unknown-linux-gnueabihf --features=full-nightly
-  arm-unknown-linux-musleabi:
-    name: Test on arm-unknown-linux-musleabi
+      - run: cargo test --target=aarch64-unknown-linux-gnu
+      - run: cargo test --target=aarch64-unknown-linux-gnu --features=full
+      - run: cargo test --target=aarch64-unknown-linux-gnu --features=full-nightly
+  aarch64-unknown-linux-musl:
+    name: Test on aarch64-unknown-linux-musl
     runs-on: ubuntu-26.04-arm
     steps:
       - run: sudo apt-get install -y musl-tools
       - uses: actions/checkout@v6
       - uses: actions-rust-lang/setup-rust-toolchain@v2
         with:
-          target: arm-unknown-linux-musleabi
+          target: aarch64-unknown-linux-musl
           toolchain: nightly
-      - run: cargo test --target=arm-unknown-linux-musleabi
-      - run: cargo test --target=arm-unknown-linux-musleabi --features=full
-      - run: cargo test --target=arm-unknown-linux-musleabi --features=full-nightly
-  arm-unknown-linux-musleabihf:
-    name: Test on arm-unknown-linux-musleabihf
-    runs-on: ubuntu-26.04-arm
-    steps:
-      - run: sudo apt-get install -y musl-tools
-      - uses: actions/checkout@v6
-      - uses: actions-rust-lang/setup-rust-toolchain@v2
-        with:
-          target: arm-unknown-linux-musleabihf
-          toolchain: nightly
-      - run: cargo test --target=arm-unknown-linux-musleabihf
-      - run: cargo test --target=arm-unknown-linux-musleabihf --features=full
-      - run: cargo test --target=arm-unknown-linux-musleabihf --features=full-nightly
-  arm64ec-pc-windows-msvc:
-    name: Test on arm64ec-pc-windows-msvc
+      - run: cargo test --target=aarch64-unknown-linux-musl
+      - run: cargo test --target=aarch64-unknown-linux-musl --features=full
+      - run: cargo test --target=aarch64-unknown-linux-musl --features=full-nightly
+  aarch64-pc-windows-gnullvm:
+    name: Test on aarch64-pc-windows-gnullvm
     runs-on: windows-11-vs2026-arm
     steps:
       - uses: actions/checkout@v6
       - uses: actions-rust-lang/setup-rust-toolchain@v2
         with:
-          target: arm64ec-pc-windows-msvc
+          target: aarch64-pc-windows-gnullvm
           toolchain: nightly
-      - run: cargo test --target=arm64ec-pc-windows-msvc
-      - run: cargo test --target=arm64ec-pc-windows-msvc --features=full
-      - run: cargo test --target=arm64ec-pc-windows-msvc --features=full-nightly
+      - run: cargo test --target=aarch64-pc-windows-gnullvm
+      - run: cargo test --target=aarch64-pc-windows-gnullvm --features=full
+      - run: cargo test --target=aarch64-pc-windows-gnullvm --features=full-nightly
+  aarch64-pc-windows-msvc:
+    name: Test on aarch64-pc-windows-msvc
+    runs-on: windows-11-vs2026-arm
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions-rust-lang/setup-rust-toolchain@v2
+        with:
+          target: aarch64-pc-windows-msvc
+          toolchain: nightly
+      - run: cargo test --target=aarch64-pc-windows-msvc
+      - run: cargo test --target=aarch64-pc-windows-msvc --features=full
+      - run: cargo test --target=aarch64-pc-windows-msvc --features=full-nightly
 
