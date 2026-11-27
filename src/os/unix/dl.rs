@@ -1,4 +1,4 @@
-use std::{ffi::{CStr, OsStr, c_void}, fs, io, os::unix::ffi::OsStrExt, path::Path, slice};
+use std::{ffi::{CStr, OsStr, c_void}, fs, io, os::unix::ffi::OsStrExt, path::Path, ptr::null_mut, slice};
 
 use libc::{Elf32_Ehdr, Elf32_Shdr, Elf64_Ehdr, Elf64_Shdr};
 
@@ -23,7 +23,13 @@ impl Handle {
         libc::dlsym(self.0, sym.as_ptr())
     } }
     pub fn get_versioned(&self, sym: &CStr, ver: &CStr) -> *mut c_void { unsafe {
-        libc::dlvsym(self.0, sym.as_ptr(), ver.as_ptr())
+        #[cfg(target_env = "gnu")]
+        {
+            return libc::dlvsym(self.0, sym.as_ptr(), ver.as_ptr())
+        }
+
+        #[allow(unreachable_code)]
+        null_mut()
     } }
 }
 impl Drop for Handle {
