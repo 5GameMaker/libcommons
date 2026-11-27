@@ -58,7 +58,7 @@ impl DirType {
         { crate::os::unix::dirs::dir(rel, self) }
         #[cfg(not(unix))]
         {
-            _ = ty;
+            _ = rel;
             None
         }
     }
