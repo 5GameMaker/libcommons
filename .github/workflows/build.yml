@@ -3,6 +3,8 @@ on: push
 permissions:
   contents: read
 jobs:
+  # Should I even bother supporting x32?
+
   x86_64_linux_unknown_gnu:
     name: Test on x86_64-linux-unknown-gnu
     runs-on: ubuntu-latest
@@ -40,4 +42,67 @@ jobs:
       - run: cargo test --target=x86_64-pc-windows-msvc
       - run: cargo test --target=x86_64-pc-windows-msvc --features=full
       - run: cargo test --target=x86_64-pc-windows-msvc --features=full-nightly
+
+  arm-unknown-linux-gnueabi:
+    name: Test on arm-unknown-linux-gnueabi
+    runs-on: ubuntu-26.04-arm
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions-rust-lang/setup-rust-toolchain@v2
+        with:
+          target: arm-unknown-linux-gnueabi
+          toolchain: nightly
+      - run: cargo test --target=arm-unknown-linux-gnueabi
+      - run: cargo test --target=arm-unknown-linux-gnueabi --features=full
+      - run: cargo test --target=arm-unknown-linux-gnueabi --features=full-nightly
+  arm-unknown-linux-gnueabihf:
+    name: Test on arm-unknown-linux-gnueabihf
+    runs-on: ubuntu-26.04-arm
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions-rust-lang/setup-rust-toolchain@v2
+        with:
+          target: arm-unknown-linux-gnueabihf
+          toolchain: nightly
+      - run: cargo test --target=arm-unknown-linux-gnueabihf
+      - run: cargo test --target=arm-unknown-linux-gnueabihf --features=full
+      - run: cargo test --target=arm-unknown-linux-gnueabihf --features=full-nightly
+  arm-unknown-linux-musleabi:
+    name: Test on arm-unknown-linux-musleabi
+    runs-on: ubuntu-26.04-arm
+    steps:
+      - run: sudo apt-get install -y musl-tools
+      - uses: actions/checkout@v6
+      - uses: actions-rust-lang/setup-rust-toolchain@v2
+        with:
+          target: arm-unknown-linux-musleabi
+          toolchain: nightly
+      - run: cargo test --target=arm-unknown-linux-musleabi
+      - run: cargo test --target=arm-unknown-linux-musleabi --features=full
+      - run: cargo test --target=arm-unknown-linux-musleabi --features=full-nightly
+  arm-unknown-linux-musleabihf:
+    name: Test on arm-unknown-linux-musleabihf
+    runs-on: ubuntu-26.04-arm
+    steps:
+      - run: sudo apt-get install -y musl-tools
+      - uses: actions/checkout@v6
+      - uses: actions-rust-lang/setup-rust-toolchain@v2
+        with:
+          target: arm-unknown-linux-musleabihf
+          toolchain: nightly
+      - run: cargo test --target=arm-unknown-linux-musleabihf
+      - run: cargo test --target=arm-unknown-linux-musleabihf --features=full
+      - run: cargo test --target=arm-unknown-linux-musleabihf --features=full-nightly
+  arm64ec-pc-windows-msvc:
+    name: Test on arm64ec-pc-windows-msvc
+    runs-on: windows-11-vs2026-arm
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions-rust-lang/setup-rust-toolchain@v2
+        with:
+          target: arm64ec-pc-windows-msvc
+          toolchain: nightly
+      - run: cargo test --target=arm64ec-pc-windows-msvc
+      - run: cargo test --target=arm64ec-pc-windows-msvc --features=full
+      - run: cargo test --target=arm64ec-pc-windows-msvc --features=full-nightly
 
