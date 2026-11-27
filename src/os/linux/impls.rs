@@ -1,13 +1,13 @@
-#[cfg(feature = "dl")]
+#[cfg(all(feature = "dl", target_os = "linux"))]
 use crate::util::Zeroable;
 
-#[cfg(feature = "dl")]
+#[cfg(all(feature = "dl", target_os = "linux"))]
 macro_rules! impl_zeroable {
     ($($ty:ty),* $(,)?) => {$(
         unsafe impl Zeroable for $ty {}
     )*};
 }
-#[cfg(feature = "dl")]
+#[cfg(all(feature = "dl", target_os = "linux"))]
 impl_zeroable! {
     libc::Elf64_Ehdr,
     libc::Elf64_Chdr,

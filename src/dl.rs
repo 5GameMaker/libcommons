@@ -2,14 +2,14 @@ use std::{ffi::c_void, io, path::Path};
 
 // TODO: Windows
 
-#[cfg(unix)]
-pub type Handle = crate::os::unix::dl::Handle;
-#[cfg(not(unix))]
+#[cfg(target_os = "linux")]
+pub type Handle = crate::os::linux::dl::Handle;
+#[cfg(not(target_os = "linux"))]
 pub type Handle = !;
 
-#[cfg(unix)]
-pub type SectionNamesIter<'a> = crate::os::unix::dl::SectionNamesIter<'a>;
-#[cfg(not(unix))]
+#[cfg(target_os = "linux")]
+pub type SectionNamesIter<'a> = crate::os::linux::dl::SectionNamesIter<'a>;
+#[cfg(not(target_os = "linux"))]
 pub type SectionNamesIter<'a> = std::slice::Iter<'a, &'a std::ffi::OsStr>;
 
 /// A dlopen'd library.
@@ -29,9 +29,9 @@ impl Library {
     ///
     /// - On Unix uses `dlopen`.
     pub fn open<S: AsRef<Path>>(path: S) -> io::Result<Self> {
-        #[cfg(unix)]
+        #[cfg(target_os = "linux")]
         { Handle::open(path).map(Self) }
-        #[cfg(not(unix))]
+        #[cfg(not(target_os = "linux"))]
         {
             _ = path;
             Err(io::Error::new(io::ErrorKind::Unsupported, "not supported on this platform"))
@@ -44,7 +44,7 @@ impl Library {
     ///
     /// - On Unix uses `dlsym`.
     pub fn load(&self, sym: &str) -> *mut c_void {
-        #[cfg(unix)]
+        #[cfg(target_os = "linux")]
         {
             use std::{ffi::CStr, ptr::null_mut};
             use crate::{ffi::str::str_to_c_str, os::unix::path::PATH_MAX};
@@ -56,7 +56,7 @@ impl Library {
             let cstr = CStr::from_bytes_with_nul(&tmp[..cstr]).unwrap();
             self.0.get(cstr)
         }
-        #[cfg(not(unix))]
+        #[cfg(not(target_os = "linux"))]
         {
             _ = sym;
             todo!()
@@ -69,14 +69,14 @@ impl Library {
 }
 
 pub struct LibraryFile(
-    #[cfg(unix)]
-    crate::os::unix::dl::LibraryFile,
+    #[cfg(target_os = "linux")]
+    crate::os::linux::dl::LibraryFile,
 );
 impl LibraryFile {
     pub fn open<S: AsRef<Path>>(path: S) -> io::Result<Self> {
-        #[cfg(unix)]
-        { crate::os::unix::dl::LibraryFile::open(path).map(Self) }
-        #[cfg(not(unix))]
+        #[cfg(target_os = "linux")]
+        { crate::os::linux::dl::LibraryFile::open(path).map(Self) }
+        #[cfg(not(target_os = "linux"))]
         {
             _ = path;
             Err(io::Error::new(io::ErrorKind::Unsupported, "not supported on this platform"))
@@ -84,18 +84,18 @@ impl LibraryFile {
     }
 
     pub fn section_names(&self) -> SectionNamesIter<'_> {
-        #[cfg(unix)]
+        #[cfg(target_os = "linux")]
         return self.0.sections();
 
-        #[cfg(not(unix))]
+        #[cfg(not(target_os = "linux"))]
         todo!()
     }
 
     pub fn section_data_by_name<S: AsRef<[u8]>>(&self, name: S) -> Option<&[u8]> {
-        #[cfg(unix)]
+        #[cfg(target_os = "linux")]
         return self.0.section_data_by_name(name);
 
-        #[cfg(not(unix))]
+        #[cfg(not(target_os = "linux"))]
         {
             _ = name;
             todo!()
