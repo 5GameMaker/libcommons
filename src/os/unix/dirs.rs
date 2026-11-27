@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 use std::{
     env::{home_dir, var},
     ffi::c_int,

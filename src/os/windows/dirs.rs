@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 use std::{env::home_dir, path::PathBuf};
 
 use crate::fs::{DirRel, DirType};
