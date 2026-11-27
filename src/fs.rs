@@ -1,3 +1,4 @@
+#[cfg(feature = "dirs")]
 use std::path::PathBuf;
 
 #[cfg(feature = "dirs")]
@@ -12,9 +13,7 @@ pub enum DirRel {
 impl DirRel {
     pub fn dir(self, ty: DirType) -> Option<PathBuf> {
         #[cfg(unix)]
-        {
-            crate::os::unix::dirs::dir(self, ty)
-        }
+        { crate::os::unix::dirs::dir(self, ty) }
     }
 }
 
@@ -47,8 +46,6 @@ pub enum DirType {
 impl DirType {
     pub fn dir(self, rel: DirRel) -> Option<PathBuf> {
         #[cfg(unix)]
-        {
-            crate::os::unix::dirs::dir(rel, self)
-        }
+        { crate::os::unix::dirs::dir(rel, self) }
     }
 }

@@ -1,4 +1,4 @@
-use std::{ffi::{CStr, OsStr, c_void}, fs, io, os::unix::ffi::OsStrExt, path::Path, ptr::null_mut, slice};
+use std::{ffi::{CStr, OsStr, c_void}, fs, io, os::unix::ffi::OsStrExt, path::Path, slice};
 
 use libc::{Elf32_Ehdr, Elf32_Shdr, Elf64_Ehdr, Elf64_Shdr};
 
@@ -22,15 +22,27 @@ impl Handle {
     pub fn get(&self, sym: &CStr) -> *mut c_void { unsafe {
         libc::dlsym(self.0, sym.as_ptr())
     } }
-    pub fn get_versioned(&self, sym: &CStr, ver: &CStr) -> *mut c_void { unsafe {
+
+    /// Obtain a versioned symbol.
+    ///
+    /// ## Platform-specific behavior
+    ///
+    /// This only ever calls to anything if [dlvsym][libc::dlvsym] is available.
+    /// Otherwise returns `null`.
+    pub fn get_versioned(&self, sym: &CStr, ver: &CStr) -> *mut c_void {
         #[cfg(target_env = "gnu")]
-        {
+        unsafe {
             return libc::dlvsym(self.0, sym.as_ptr(), ver.as_ptr())
         }
+        #[cfg(not(target_env = "gnu"))]
+        {
+            use std::ptr::null_mut;
 
-        #[allow(unreachable_code)]
-        null_mut()
-    } }
+            _ = (sym, ver);
+            #[allow(unreachable_code)]
+            null_mut()
+        }
+    }
 }
 impl Drop for Handle {
     fn drop(&mut self) { unsafe {
